@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧬 Laboratorio de Bioinformática - Simuladores</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: linear-gradient(145deg, #eef3f9 0%, #d9e2ed 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 40px;
+            box-shadow: 0 30px 80px rgba(0, 20, 40, 0.25);
+            padding: 40px 35px 50px;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 38px;
+            font-weight: 700;
+            color: #0b1e2e;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .header h1 span {
+            background: #1a3a5a;
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+            padding: 4px 18px;
+            border-radius: 40px;
+            letter-spacing: 0.3px;
+        }
+
+        .header p {
+            color: #2c4a6a;
+            font-size: 18px;
+            margin-top: 8px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.5;
+            border-top: 2px solid rgba(26, 58, 90, 0.15);
+            padding-top: 12px;
+            display: inline-block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 28px;
+            margin: 20px 0 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 28px 22px 24px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            transition: transform 0.25s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-8px) scale(1.01);
+            box-shadow: 0 20px 50px rgba(26, 58, 90, 0.18);
+            border-color: rgba(44, 123, 229, 0.2);
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: #2c7be5;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover::after {
+            opacity: 1;
+        }
+
+        .card .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            display: block;
+            line-height: 1;
+        }
+
+        .card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0b1e2e;
+            margin-bottom: 8px;
+            letter-spacing: -0.2px;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #3a5a7a;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            flex-grow: 1;
+        }
+
+        .card .badge {
+            font-size: 12px;
+            font-weight: 600;
+            color: #2c7be5;
+            background: #eaf2fd;
+            padding: 4px 14px;
+            border-radius: 30px;
+            display: inline-block;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            margin-top: auto;
+        }
+
+        .card:nth-child(1)::after { background: #2ecc71; }
+        .card:nth-child(2)::after { background: #f39c12; }
+        .card:nth-child(3)::after { background: #9b59b6; }
+        .card:nth-child(4)::after { background: #e67e22; }
+        .card:nth-child(5)::after { background: #e74c3c; }
+
+        .card:nth-child(1) .badge { color: #27ae60; background: #eafaf1; }
+        .card:nth-child(2) .badge { color: #d68910; background: #fef9e7; }
+        .card:nth-child(3) .badge { color: #8e44ad; background: #f4ecf7; }
+        .card:nth-child(4) .badge { color: #d35400; background: #fdebd0; }
+        .card:nth-child(5) .badge { color: #c0392b; background: #fadbd8; }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 14px;
+            color: #4a6a8a;
+            border-top: 1px solid rgba(0,0,0,0.06);
+            padding-top: 24px;
+        }
+
+        .footer a {
+            color: #1a3a5a;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 700px) {
+            .container { padding: 24px 18px 30px; }
+            .header h1 { font-size: 28px; }
+            .grid { grid-template-columns: 1fr; }
+            .card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <h1>
+            🧬 Laboratorio de Bioinformática
+            <span>Simuladores</span>
+        </h1>
+        <p>
+            Explora herramientas interactivas para entender la genética, la evolución y la salud desde el código de la vida.
+        </p>
+    </div>
+
+    <div class="grid">
+
+        <a href="simulador1.html" target="_blank" class="card">
+            <span class="icon">🧬</span>
+            <h3>Transcripción y Alineamiento</h3>
+            <p>
+                Convierte ADN en ARN, aplica el algoritmo Needleman‑Wunsch y visualiza la matriz de alineamiento con penalización por gaps.
+            </p>
+            <span class="badge">🔬 Secuenciación</span>
+        </a>
+
+        <a href="simulador2.html" target="_blank" class="card">
+            <span class="icon">🌳</span>
+            <h3>Filogenia Evolutiva</h3>
+            <p>
+                Selecciona tres especies y obtén un árbol filogenético basado en distancias genéticas reales, con análisis del reloj molecular.
+            </p>
+            <span class="badge">🌿 Evolución</span>
+        </a>
+
+        <a href="simulador3.html" target="_blank" class="card">
+            <span class="icon">🧩</span>
+            <h3>Ensamblado de Genomas</h3>
+            <p>
+                Convierte palabras en ADN, genera k‑meros, construye grafos de prefijo‑sufijo y evalúa la repetitividad del genoma.
+            </p>
+            <span class="badge">🧩 Bioinformática</span>
+        </a>
+
+        <a href="simulador4.html" target="_blank" class="card">
+            <span class="icon">🧫</span>
+            <h3>Bioingeniería Celular</h3>
+            <p>
+                Ajusta temperatura, biomasa y tiempo para simular la cinética de crecimiento microbiano con la ecuación de Arrhenius.
+            </p>
+            <span class="badge">⚙️ Bioprocesos</span>
+        </a>
+
+        <a href="simulador5.html" target="_blank" class="card">
+            <span class="icon">🩺</span>
+            <h3>Patologías Genéticas 3D</h3>
+            <p>
+                Explora 10 enfermedades genéticas, visualiza la mutación a nivel de nucleótidos y observa la proteína mutada en 3D interactivo.
+            </p>
+            <span class="badge">🧬 Medicina</span>
+        </a>
+
+    </div>
+
+    <div class="footer">
+        <p>
+            📚 Simuladores educativos · Desarrollados para la enseñanza de la biología molecular y la bioinformática.<br>
+            <span style="opacity:0.6;">Todos los modelos utilizan datos reales aproximados y algoritmos clásicos.</span>
+        </p>
+        <p style="margin-top:6px; font-size:13px;">
+            <a href="#" onclick="alert('¡Gracias por visitar el laboratorio virtual!'); return false;">Acerca de</a> ·
+            <a href="#" onclick="alert('Instrucciones: Cada simulador se abre en una nueva pestaña. ¡Explora y aprende!'); return false;">Ayuda</a>
+        </p>
+    </div>
+
+</div>
+</body>
+</html>

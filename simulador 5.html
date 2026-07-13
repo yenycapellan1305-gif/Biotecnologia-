@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Médico - Patologías Genéticas en 3D</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.1.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #f0f5fc;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 20, 40, 0.12);
+            padding: 30px 35px 40px;
+            transition: all 0.2s;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a2a3a;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        h1 small {
+            font-size: 16px;
+            font-weight: 400;
+            color: #4a6a85;
+        }
+
+        .subtitle {
+            color: #3a5a7a;
+            font-size: 15px;
+            border-left: 4px solid #2c7be5;
+            padding-left: 16px;
+            margin-bottom: 28px;
+            background: #f0f7fe;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.6;
+            padding: 10px 16px;
+        }
+
+        /* Controles */
+        .controls {
+            background: #f8fbff;
+            border-radius: 16px;
+            padding: 22px 25px;
+            margin-bottom: 28px;
+            border: 1px solid #e2ebf5;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 20px 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1 0 180px;
+        }
+
+        .control-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f3348;
+            margin-bottom: 5px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .control-group select {
+            padding: 10px 12px;
+            border: 1.5px solid #d0dcec;
+            border-radius: 10px;
+            font-size: 15px;
+            background: white;
+            transition: border 0.2s, box-shadow 0.2s;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .control-group select:focus {
+            border-color: #2c7be5;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.15);
+        }
+
+        .slider-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 4px 12px 4px 16px;
+            border-radius: 30px;
+            border: 1px solid #dee8f2;
+            flex: 1 0 160px;
+        }
+
+        .slider-item label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e2f3f;
+            min-width: 70px;
+        }
+
+        .slider-item input[type="range"] {
+            flex: 1;
+            min-width: 70px;
+            accent-color: #2c7be5;
+            height: 5px;
+            background: #dbe4ed;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .slider-item .value-badge {
+            background: #eef4fa;
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a2a3a;
+            min-width: 28px;
+            text-align: center;
+        }
+
+        /* Resultados */
+        .results {
+            margin-top: 20px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a2a3a;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #e6edf5;
+            padding-bottom: 8px;
+        }
+
+        .intro-box {
+            background-color: #f4f6f7;
+            border-left: 5px solid #7f8c8d;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .intro-box h3 {
+            margin: 0 0 5px 0;
+            color: #2c3e50;
+            font-size: 15px;
+        }
+
+        .intro-box p {
+            color: #000000;
+            font-size: 13px;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .dashboard {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-family: 'Segoe UI', sans-serif;
+            flex-wrap: wrap;
+        }
+
+        .dashboard-card {
+            flex: 1;
+            padding: 12px;
+            border-radius: 6px;
+            min-width: 200px;
+        }
+
+        .dashboard-card .label {
+            font-size: 10px;
+            color: #7f8c8d;
+            font-weight: bold;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        .dashboard-card .value {
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .dashboard-card .desc {
+            font-size: 12.5px;
+            color: #000000;
+            margin: 5px 0 0 0;
+            line-height: 1.4;
+        }
+
+        .secuencia-box {
+            background-color: #fdfefe;
+            border: 1px solid #bdc3c7;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .secuencia-box .label {
+            font-weight: bold;
+            color: #7f8c8d;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 11px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .chart-container {
+            margin: 15px 0;
+            border-radius: 12px;
+            border: 1px solid #e6edf5;
+            background: white;
+            padding: 5px;
+        }
+
+        .footer-note {
+            margin-top: 30px;
+            font-size: 13px;
+            color: #6a8aaa;
+            text-align: center;
+            border-top: 1px solid #e6edf5;
+            padding-top: 18px;
+        }
+
+        @media (max-width: 700px) {
+            .container { padding: 20px 16px; }
+            .controls { flex-direction: column; align-items: stretch; gap: 16px; }
+            .dashboard { flex-direction: column; }
+            .slider-item { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>
+        🧬 Simulador Médico
+        <small>Diagnóstico Automatizado de Patologías Genéticas en 3D</small>
+    </h1>
+    <div class="subtitle">
+        Elige una enfermedad del menú desplegable para rastrear cómo los errores en el ADN mutan la forma espacial de las proteínas.
+    </div>
+
+    <!-- Controles -->
+    <div class="controls">
+        <div class="control-group">
+            <label for="enfermedadSelect">Selecciona una Enfermedad</label>
+            <select id="enfermedadSelect">
+                <option value="1. Anemia Falciforme (Missense)">1. Anemia Falciforme (Missense)</option>
+                <option value="2. Fibrosis Quística (Deleción/Nonsense simulado)">2. Fibrosis Quística (Deleción/Nonsense simulado)</option>
+                <option value="3. Enfermedad de Huntington (Expansión Excesiva)">3. Enfermedad de Huntington (Expansión Excesiva)</option>
+                <option value="4. Distrofia Muscular de Duchenne (Nonsense)">4. Distrofia Muscular de Duchenne (Nonsense)</option>
+                <option value="5. Fenilcetonuria (PKU - Missense)">5. Fenilcetonuria (PKU - Missense)</option>
+                <option value="6. Cáncer de Mama Hereditario (BRCA1 - Truncamiento)">6. Cáncer de Mama Hereditario (BRCA1 - Truncamiento)</option>
+                <option value="7. Alzheimer Familiar (Gen APP - Missense)">7. Alzheimer Familiar (Gen APP - Missense)</option>
+                <option value="8. Hemofilia B (Deficiencia de Factor IX)">8. Hemofilia B (Deficiencia de Factor IX)</option>
+                <option value="9. Síndrome de Marfan (Fibrilina-1 Missense)">9. Síndrome de Marfan (Fibrilina-1 Missense)</option>
+                <option value="10. Hipercolesterolemia Familiar (Receptor LDL)">10. Hipercolesterolemia Familiar (Receptor LDL)</option>
+            </select>
+        </div>
+
+        <div class="slider-item">
+            <label for="azimSlider">Horizontal</label>
+            <input type="range" id="azimSlider" min="0" max="360" value="45" step="5">
+            <span class="value-badge" id="azimVal">45°</span>
+        </div>
+        <div class="slider-item">
+            <label for="elevSlider">Vertical</label>
+            <input type="range" id="elevSlider" min="0" max="90" value="20" step="5">
+            <span class="value-badge" id="elevVal">20°</span>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div id="resultsContainer" class="results"></div>
+
+    <div class="footer-note">
+        Simulador educativo · Modelado 3D de mutaciones · <span style="color:#2c7be5;">Bioinformática estructural</span>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // --- BASE DE DATOS DE ENFERMEDADES (idéntica a la del código original) ---
+        const ENFERMEDADES_MUTACIONES = {
+            "1. Anemia Falciforme (Missense)": {
+                "sano": "ATGGTGCACCTGACTCCTGAGGAG",
+                "mutado": "ATGGTGCACCTGACTCCTGTGGAG",
+                "enfermedad": "Anemia Falciforme",
+                "explicacion": "Ocurre por la sustitución de una sola base (A por T) en el gen de la beta-globina. Esto cambia el aminoácido Ácido Glutámico (polares/cargados) por Valina (hidrofóbico), causando que la hemoglobina se deforme en forma de hoz y bloquee los capilares sanguíneos.",
+                "daño": 45
+            },
+            "2. Fibrosis Quística (Deleción/Nonsense simulado)": {
+                "sano": "ATCATCTTTGGTGTT",
+                "mutado": "ATCATCTAAGGTGTT",
+                "enfermedad": "Fibrosis Quística (Variante de parada)",
+                "explicacion": "Una alteración crítica en el regulador de conductancia transmembrana (CFTR). Al transformarse en un codón de parada prematuro, el canal de cloruro celular no se termina de construir, provocando la acumulación de moco espeso en pulmones y sistema digestivo.",
+                "daño": 90
+            },
+            "3. Enfermedad de Huntington (Expansión Excesiva)": {
+                "sano": "ATGCAACAGCAGCAGCAG",
+                "mutado": "ATGCAACAGCAGCAGCAGCAGCAGCAGCAGCAGCAGCAG",
+                "enfermedad": "Enfermedad de Huntington",
+                "explicacion": "Se da por una expansión anormal de tripletes 'CAG' (que codifican para Glutamina). Al superar un umbral crítico, la proteína huntingtina se pliega incorrectamente y se vuelve tóxica para las neuronas, desencadenando degeneración motora y cognitiva progresiva.",
+                "daño": 75
+            },
+            "4. Distrofia Muscular de Duchenne (Nonsense)": {
+                "sano": "ATGAAGAGAAGT",
+                "mutado": "ATGAAGTAAAGT",
+                "enfermedad": "Distrofia Muscular de Duchenne",
+                "explicacion": "Una mutación puntual genera un codón de parada prematuro (TAA) en el gen de la distrofina. La célula aborta la síntesis de la proteína a la mitad, dejando a los músculos esqueléticos sin su amortiguador estructural esencial, derivando en debilidad muscular grave.",
+                "daño": 95
+            },
+            "5. Fenilcetonuria (PKU - Missense)": {
+                "sano": "ATGTTCGAAATC",
+                "mutado": "ATGTTCGACATC",
+                "enfermedad": "Fenilcetonuria",
+                "explicacion": "Cambio de una sola base en el gen de la fenilalanina hidroxilasa. Al modificarse la estructura tridimensional del centro activo enzimático, el organismo pierde la capacidad de degradar el aminoácido fenilalanina, acumulándose de forma tóxica en el tejido cerebral.",
+                "daño": 40
+            },
+            "6. Cáncer de Mama Hereditario (BRCA1 - Truncamiento)": {
+                "sano": "ATGTTTCCCAAAGGG",
+                "mutado": "ATGTTTTAAAAAGGG",
+                "enfermedad": "Mutación de Control en BRCA1",
+                "explicacion": "Un cambio drástico altera la secuencia del supresor de tumores BRCA1. Sin esta proteína correctamente estructurada en el espacio 3D, las células pierden el mecanismo principal para reparar roturas en el ADN de doble cadena, aumentando masivamente el riesgo de mutaciones secundarias.",
+                "daño": 80
+            },
+            "7. Alzheimer Familiar (Gen APP - Missense)": {
+                "sano": "ATCATCCTTGGTGTT",
+                "mutado": "ATCATCCTTGATATT",
+                "enfermedad": "Alzheimer de Inicio Temprano (Mutación Indiana)",
+                "explicacion": "Mutación puntual en la proteína precursora amiloide (APP). Este sutil cambio estructural en la cadena 3D altera los sitios de corte de las secretasas, forzando la sobreproducción y agregación de placas del péptido beta-amiloide neurotóxico.",
+                "daño": 50
+            },
+            "8. Hemofilia B (Deficiencia de Factor IX)": {
+                "sano": "ATGGGGCCCAAA",
+                "mutado": "ATGGGGTAAAAA",
+                "enfermedad": "Hemofilia B",
+                "explicacion": "Una mutación nonsense destruye la arquitectura molecular del factor IX de coagulación. Al detenerse la traducción, la cascada química de la coagulación se interrumpe por completo, impidiendo que el cuerpo detenga las hemorragias de forma natural.",
+                "daño": 85
+            },
+            "9. Síndrome de Marfan (Fibrilina-1 Missense)": {
+                "sano": "ATGTTCGAAATGCCC",
+                "mutado": "ATGTTCGAATTGGCC",
+                "enfermedad": "Síndrome de Marfan",
+                "explicacion": "Cambios de sentido en el gen FBN1 alteran el plegamiento de las glicoproteínas de la matriz extracelular. Esto debilita la integridad mecánica del tejido conectivo, afectando severamente al sistema cardiovascular (riesgo de aneurisma aórtico) y al esqueleto.",
+                "daño": 60
+            },
+            "10. Hipercolesterolemia Familiar (Receptor LDL)": {
+                "sano": "ATGAAAGGGCCC",
+                "mutado": "ATGAAAGGGCTC",
+                "enfermedad": "Hipercolesterolemia Familiar",
+                "explicacion": "Una sustitución puntual altera los dominios de unión del receptor celular de LDL en el hígado. Al deformarse la superficie tridimensional del receptor, este pierde afinidad por el colesterol en sangre, disparando los niveles plasmáticos de lípidos.",
+                "daño": 55
+            }
+        };
+
+        // --- PROPIEDADES BIOQUÍMICAS PARA EL MODELADO 3D ---
+        const PROPIEDADES_BIOQUIMICAS = {
+            'Met (Inicio)': { color: '#27ae60', radio: 140 },
+            'Phe': { color: '#2ecc71', radio: 190 },
+            'Pro': { color: '#f1c40f', radio: 110 },
+            'Lys': { color: '#2980b9', radio: 170 },
+            'Gly': { color: '#f39c12', radio: 60 },
+            'Glu': { color: '#9b59b6', radio: 150 },
+            'Ile': { color: '#1abc9c', radio: 160 },
+            'Val': { color: '#16a085', radio: 135 },
+            'Asp': { color: '#8e44ad', radio: 140 },
+            'Leu': { color: '#2ecc71', radio: 165 },
+            'STOP': { color: '#e74c3c', radio: 0 },
+            'Unk': { color: '#7f8c8d', radio: 100 }
+        };
+
+        const CODIGO_GENETICO = {
+            'ATG': 'Met (Inicio)', 'TTT': 'Phe', 'CCC': 'Pro', 'AAA': 'Lys',
+            'GGG': 'Gly', 'TAA': 'STOP', 'ATC': 'Ile', 'TTC': 'Phe',
+            'CCA': 'Pro', 'GAA': 'Glu', 'GTG': 'Val', 'CAC': 'His',
+            'CTG': 'Leu', 'ACT': 'Thr', 'CCT': 'Pro', 'TGT': 'Cys',
+            'GTT': 'Val', 'GAC': 'Asp'
+        };
+
+        // --- Elementos DOM ---
+        const enfermedadSelect = document.getElementById('enfermedadSelect');
+        const azimSlider = document.getElementById('azimSlider');
+        const elevSlider = document.getElementById('elevSlider');
+        const azimVal = document.getElementById('azimVal');
+        const elevVal = document.getElementById('elevVal');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        // Actualizar valores de los sliders
+        azimSlider.addEventListener('input', () => { azimVal.textContent = azimSlider.value + '°'; });
+        elevSlider.addEventListener('input', () => { elevVal.textContent = elevSlider.value + '°'; });
+
+        // --- Funciones de traducción ---
+        function traducirADN(adn) {
+            const aminoacidos = [];
+            for (let i = 0; i < adn.length - 2; i += 3) {
+                const codon = adn.substring(i, i + 3);
+                aminoacidos.push(CODIGO_GENETICO[codon] || 'Unk');
+            }
+            return aminoacidos;
+        }
+
+        // --- Función principal de simulación ---
+        function ejecutarSimulacion() {
+            const opcion = enfermedadSelect.value;
+            const azim = parseFloat(azimSlider.value);
+            const elev = parseFloat(elevSlider.value);
+
+            const data = ENFERMEDADES_MUTACIONES[opcion];
+            const secSana = data.sano;
+            const secMutada = data.mutado;
+            const nombreEnf = data.enfermedad;
+            const explEnf = data.explicacion;
+            const deformacion = data.daño;
+
+            // 1. Generar secuencia marcada (nucleótidos)
+            const lenMin = Math.min(secSana.length, secMutada.length);
+            let secuenciaMarcada = '';
+            for (let idx = 0; idx < Math.max(secSana.length, secMutada.length); idx++) {
+                if (idx < lenMin) {
+                    if (secSana[idx] !== secMutada[idx]) {
+                        secuenciaMarcada += `<span style="color:#e74c3c; font-weight:bold; background-color:#fadbd8; padding:0 3px; font-size:16px;">${secMutada[idx]}</span>`;
+                    } else {
+                        secuenciaMarcada += `<span style="color:#2c3e50; font-weight:bold;">${secMutada[idx]}</span>`;
+                    }
+                } else {
+                    // Inserción/expansión
+                    secuenciaMarcada += `<span style="color:#e74c3c; font-weight:bold; background-color:#fadbd8; padding:0 3px; font-size:16px;">${secMutada[idx]}</span>`;
+                }
+            }
+
+            // 2. Traducción a aminoácidos
+            const aaSano = traducirADN(secSana);
+            const aaMutado = traducirADN(secMutada);
+
+            // 3. Detectar índice del aminoácido afectado
+            let idxMutadoAA = -1;
+            const minLenAA = Math.min(aaSano.length, aaMutado.length);
+            for (let i = 0; i < minLenAA; i++) {
+                if (aaSano[i] !== aaMutado[i]) {
+                    idxMutadoAA = i;
+                    break;
+                }
+            }
+            // Si no se encontró y hay diferencia de longitud (Huntington), el afectado es el último de la cadena corta
+            if (idxMutadoAA === -1 && aaMutado.length > aaSano.length) {
+                idxMutadoAA = aaSano.length; // asumimos que la expansión afecta a partir de ahí
+            }
+
+            const esNonsense = aaMutado.includes('STOP');
+
+            // 4. Construir HTML de resultados
+            let html = `
+                <div class="intro-box">
+                    <h3>🧬 ¿Qué es una Mutación Genética?</h3>
+                    <p>Una <b>mutación</b> es cualquier cambio permanente en la secuencia de nucleótidos (letras A, T, C, G) que componen el ADN. Pueden ser causadas por errores de copia celular o factores ambientales. Si el cambio altera los aminoácidos, la proteína resultante puede perder su forma tridimensional real y dejar de funcionar, dando origen a enfermedades genéticas.</p>
+                </div>
+                <div class="dashboard">
+                    <div class="dashboard-card" style="background-color: #fef9e7; border: 2px solid #f39c12;">
+                        <span class="label">PATOLOGÍA SELECCIONADA</span>
+                        <span class="value" style="color: #d35400;">${nombreEnf}</span>
+                        <p class="desc"><b>¿Cómo ocurre?:</b> ${explEnf}</p>
+                    </div>
+                    <div class="dashboard-card" style="background-color: #f8f9fa; border: 2px solid #2c3e50;">
+                        <span class="label">ANÁLISIS ESTRUCTURAL DE TRADUCCIÓN</span>
+                        <p class="desc" style="font-size:12px;">
+                            Cadena Control Sana:<br><span style="color:#27ae60; font-family:monospace; font-weight:bold;">${aaSano.join(', ')}</span><br><br>
+                            Cadena Paciente Mutada:<br><span style="color:#c0392b; font-family:monospace; font-weight:bold;">${aaMutado.join(', ')}</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="secuencia-box">
+                    <span class="label">SECUENCIA DE NUCLEÓTIDOS DEL PACIENTE (EL ERROR SE MARCA EN ROJO):</span>
+                    🧬 ${secuenciaMarcada}
+                </div>
+            `;
+
+            // 5. Gráfico 3D con Plotly
+            // Preparar datos para el gráfico
+            const numResiduos = aaMutado.length;
+            const t = Array.from({ length: numResiduos }, (_, i) => i * 3 * Math.PI / (numResiduos || 1));
+            const factor = 1.5 + deformacion / 50.0;
+            const x = t.map(ti => Math.sin(ti) * factor);
+            const y = t.map(ti => Math.cos(ti) * factor);
+            const z = Array.from({ length: numResiduos }, (_, i) => (i / (numResiduos - 1 || 1)) * 4.5);
+
+            // Crear trazas: puntos y línea
+            const trazas = [];
+
+            // Línea conectora
+            trazas.push({
+                type: 'scatter3d',
+                mode: 'lines',
+                x: x,
+                y: y,
+                z: z,
+                line: { color: '#bdc3c7', width: 2, dash: 'dot' },
+                showlegend: false,
+                hoverinfo: 'skip'
+            });
+
+            // Puntos con colores y tamaños según aminoácido
+            const colores = [];
+            const tamanos = [];
+            const textos = [];
+            let stopDetected = false;
+            let stopIndex = -1;
+
+            for (let i = 0; i < numResiduos; i++) {
+                const aa = aaMutado[i];
+                const prop = PROPIEDADES_BIOQUIMICAS[aa] || PROPIEDADES_BIOQUIMICAS['Unk'];
+                let color = prop.color;
+                let tamaño = prop.radio * 1.7;
+                let texto = `${i+1}. ${aa}`;
+
+                // Resaltar mutación o STOP
+                if (aa === 'STOP') {
+                    color = '#e74c3c';
+                    tamaño = 300;
+                    texto = '🛑 STOP PREMATURO';
+                    stopDetected = true;
+                    stopIndex = i;
+                    // No romper el bucle, pero marcar como especial
+                } else if (i === idxMutadoAA && !stopDetected) {
+                    color = '#e74c3c';
+                    tamaño = prop.radio * 2;
+                    texto = `MUTADO: ${aa}`;
+                } else if (stopDetected && i > stopIndex) {
+                    // Omitir residuos posteriores al STOP (no se dibujan)
+                    continue;
+                }
+
+                colores.push(color);
+                tamanos.push(tamaño);
+                textos.push(texto);
+            }
+
+            // Solo añadir puntos si hay datos
+            if (colores.length > 0) {
+                trazas.push({
+                    type: 'scatter3d',
+                    mode: 'markers',
+                    x: x.slice(0, colores.length),
+                    y: y.slice(0, colores.length),
+                    z: z.slice(0, colores.length),
+                    marker: {
+                        color: colores,
+                        size: tamanos,
+                        line: { color: '#2c3e50', width: 1 },
+                        symbol: 'circle'
+                    },
+                    text: textos,
+                    hoverinfo: 'text',
+                    showlegend: false
+                });
+            }
+
+            // Si hay STOP, añadir un marcador especial en el punto de parada
+            if (stopDetected && stopIndex >= 0 && stopIndex < numResiduos) {
+                trazas.push({
+                    type: 'scatter3d',
+                    mode: 'markers+text',
+                    x: [x[stopIndex]],
+                    y: [y[stopIndex]],
+                    z: [z[stopIndex]],
+                    marker: {
+                        color: '#e74c3c',
+                        size: 40,
+                        symbol: 'x-thin',
+                        line: { color: 'black', width: 2 }
+                    },
+                    text: ['STOP'],
+                    textposition: 'top center',
+                    textfont: { color: 'red', size: 14, family: 'Arial Black' },
+                    hoverinfo: 'skip',
+                    showlegend: false
+                });
+            }
+
+            // Layout
+            const layout = {
+                scene: {
+                    camera: {
+                        eye: { x: 1.5, y: 1.5, z: 1.0 }
+                    },
+                    xaxis: { visible: false },
+                    yaxis: { visible: false },
+                    zaxis: { visible: false },
+                    aspectmode: 'manual',
+                    aspectratio: { x: 1, y: 1, z: 0.8 }
+                },
+                margin: { l: 0, r: 0, t: 0, b: 0 },
+                paper_bgcolor: 'rgba(255,255,255,0)',
+                plot_bgcolor: 'rgba(255,255,255,0)',
+                hovermode: 'closest'
+            };
+
+            // Ajustar cámara según sliders (azim, elev)
+            const radAzim = azim * Math.PI / 180;
+            const radElev = elev * Math.PI / 180;
+            const radius = 4.0;
+            const cx = radius * Math.cos(radAzim) * Math.cos(radElev);
+            const cy = radius * Math.sin(radAzim) * Math.cos(radElev);
+            const cz = radius * Math.sin(radElev);
+            layout.scene.camera.eye = { x: cx, y: cy, z: cz };
+
+            // Crear div para el gráfico
+            const chartId = 'chart-' + Date.now();
+            html += `<div class="chart-container" id="${chartId}" style="height:450px;"></div>`;
+
+            // Insertar en el contenedor
+            resultsContainer.innerHTML = html;
+
+            // Renderizar gráfico
+            const chartDiv = document.getElementById(chartId);
+            if (chartDiv) {
+                Plotly.newPlot(chartDiv, trazas, layout, { responsive: true, displayModeBar: false });
+            }
+        }
+
+        // --- Eventos ---
+        enfermedadSelect.addEventListener('change', ejecutarSimulacion);
+        azimSlider.addEventListener('input', ejecutarSimulacion);
+        elevSlider.addEventListener('input', ejecutarSimulacion);
+
+        // Ejecutar al cargar
+        window.addEventListener('load', ejecutarSimulacion);
+    })();
+</script>
+</body>
+</html>
