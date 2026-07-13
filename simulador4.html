@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Bioingeniería - Cinética de Crecimiento Celular</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #f0f5fc;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 20, 40, 0.12);
+            padding: 30px 35px 40px;
+            transition: all 0.2s;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a2a3a;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        h1 small {
+            font-size: 16px;
+            font-weight: 400;
+            color: #4a6a85;
+        }
+
+        .subtitle {
+            color: #3a5a7a;
+            font-size: 15px;
+            border-left: 4px solid #2c7be5;
+            padding-left: 16px;
+            margin-bottom: 28px;
+            background: #f0f7fe;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.6;
+            padding: 10px 16px;
+        }
+
+        /* Controles */
+        .controls {
+            background: #f8fbff;
+            border-radius: 16px;
+            padding: 22px 25px;
+            margin-bottom: 28px;
+            border: 1px solid #e2ebf5;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 20px 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1 0 180px;
+        }
+
+        .control-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f3348;
+            margin-bottom: 5px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .slider-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 4px 12px 4px 16px;
+            border-radius: 30px;
+            border: 1px solid #dee8f2;
+            flex: 1 0 180px;
+        }
+
+        .slider-item label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e2f3f;
+            min-width: 70px;
+        }
+
+        .slider-item input[type="range"] {
+            flex: 1;
+            min-width: 70px;
+            accent-color: #2c7be5;
+            height: 5px;
+            background: #dbe4ed;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .slider-item .value-badge {
+            background: #eef4fa;
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a2a3a;
+            min-width: 28px;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #1a3a5a;
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 14px 32px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(26, 58, 90, 0.2);
+            letter-spacing: 0.3px;
+            flex: 1 0 200px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover {
+            background: #0f2a44;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(26, 58, 90, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Resultados */
+        .results {
+            margin-top: 20px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a2a3a;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #e6edf5;
+            padding-bottom: 8px;
+        }
+
+        /* Dashboard */
+        .dashboard {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-family: 'Segoe UI', sans-serif;
+            flex-wrap: wrap;
+        }
+
+        .dashboard-card {
+            flex: 1;
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            min-width: 200px;
+        }
+
+        .dashboard-card .label {
+            font-size: 11px;
+            color: #7f8c8d;
+            font-weight: bold;
+            display: block;
+        }
+
+        .dashboard-card .value {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .dashboard-card .desc {
+            font-size: 12px;
+            color: #000000;
+            margin: 4px 0 0 0;
+        }
+
+        .chart-container {
+            margin: 15px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e6edf5;
+        }
+
+        .analysis-box {
+            background-color: #f5eef8;
+            border-left: 5px solid #9b59b6;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .analysis-box h4 {
+            color: #6c3483;
+            margin-top: 0;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .analysis-box p {
+            color: #000000;
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 8px 0;
+        }
+
+        .footer-note {
+            margin-top: 30px;
+            font-size: 13px;
+            color: #6a8aaa;
+            text-align: center;
+            border-top: 1px solid #e6edf5;
+            padding-top: 18px;
+        }
+
+        @media (max-width: 700px) {
+            .container { padding: 20px 16px; }
+            .controls { flex-direction: column; align-items: stretch; gap: 16px; }
+            .dashboard { flex-direction: column; }
+            .btn-primary { width: 100%; }
+            .slider-item { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>
+        🧫 Simulador de Bioingeniería
+        <small>Cinética de Crecimiento Celular</small>
+    </h1>
+    <div class="subtitle">
+        Modifica las variables físicas y termodinámicas para visualizar la dinámica metabólica y la tasa exponencial en tiempo real.
+    </div>
+
+    <!-- Controles -->
+    <div class="controls">
+        <div class="slider-item">
+            <label for="tempSlider">Temperatura</label>
+            <input type="range" id="tempSlider" min="15" max="50" value="27" step="1">
+            <span class="value-badge" id="tempVal">27 °C</span>
+        </div>
+        <div class="slider-item">
+            <label for="biomasaSlider">Biomasa Inicial</label>
+            <input type="range" id="biomasaSlider" min="0.5" max="10" value="2.0" step="0.5">
+            <span class="value-badge" id="biomasaVal">2.0 u</span>
+        </div>
+        <div class="slider-item">
+            <label for="tiempoSlider">Tiempo</label>
+            <input type="range" id="tiempoSlider" min="2" max="24" value="12" step="1">
+            <span class="value-badge" id="tiempoVal">12 h</span>
+        </div>
+        <button class="btn-primary" id="simularBtn">⚡ Activar y Monitorizar Biorreactor</button>
+    </div>
+
+    <!-- Área de resultados -->
+    <div id="resultsContainer" class="results"></div>
+
+    <div class="footer-note">
+        Simulador educativo · Modelo de Arrhenius y desnaturalización térmica · <span style="color:#2c7be5;">Bioingeniería</span> aplicada
+    </div>
+</div>
+
+<script>
+    (function() {
+        // Elementos DOM
+        const tempSlider = document.getElementById('tempSlider');
+        const biomasaSlider = document.getElementById('biomasaSlider');
+        const tiempoSlider = document.getElementById('tiempoSlider');
+        const tempVal = document.getElementById('tempVal');
+        const biomasaVal = document.getElementById('biomasaVal');
+        const tiempoVal = document.getElementById('tiempoVal');
+        const simularBtn = document.getElementById('simularBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        // Actualizar valores mostrados
+        tempSlider.addEventListener('input', () => { tempVal.textContent = tempSlider.value + ' °C'; });
+        biomasaSlider.addEventListener('input', () => { biomasaVal.textContent = biomasaSlider.value + ' u'; });
+        tiempoSlider.addEventListener('input', () => { tiempoVal.textContent = tiempoSlider.value + ' h'; });
+
+        // Referencia al gráfico
+        let chartInstance = null;
+
+        // --- Función de simulación ---
+        function simularCrecimiento(tempC, biomasaInicial, tiempoHoras) {
+            const R = 8.314;
+            const T_kelvin = tempC + 273.15;
+            const Ea = 50000;
+            const A = 2.5e8;
+
+            // Tasa específica (Arrhenius)
+            let mu = A * Math.exp(-Ea / (R * T_kelvin));
+
+            // Factor de desnaturalización si T > 40
+            if (tempC > 40) {
+                const factorSupervivencia = Math.max(0.0, 1.0 - (tempC - 40) * 0.12);
+                mu = mu * factorSupervivencia;
+            }
+
+            // Generar puntos de la curva (100 puntos)
+            const puntos = 100;
+            const tiempos = [];
+            const poblacion = [];
+            for (let i = 0; i < puntos; i++) {
+                const t = (i / (puntos - 1)) * tiempoHoras;
+                tiempos.push(t);
+                poblacion.push(biomasaInicial * Math.exp(mu * t));
+            }
+            const poblacionFinal = poblacion[poblacion.length - 1];
+
+            // Diagnóstico del estado
+            let estado, color, desc;
+            if (tempC >= 35 && tempC <= 38) {
+                estado = 'ÓPTIMO ✨';
+                color = '#2ecc71';
+                desc = 'Las enzimas operan a velocidad máxima. Crecimiento bacteriano ideal.';
+            } else if (tempC >= 25 && tempC < 35) {
+                estado = 'ESTABLE 🟡';
+                color = '#f1c40f';
+                desc = 'Temperatura templada. El crecimiento es constante pero moderado.';
+            } else if (tempC > 38 && tempC <= 41) {
+                estado = 'ALERTA TÉRMICA 🟠';
+                color = '#e67e22';
+                desc = 'Calor elevado. Riesgo incipiente de estrés celular y mal plegamiento de proteínas.';
+            } else {
+                estado = 'CRÍTICO (PELIGRO) 🔴';
+                color = '#e74c3c';
+                desc = 'Temperatura extrema. Las proteínas se desnaturalizan o el metabolismo se detiene por completo.';
+            }
+
+            return {
+                tiempos,
+                poblacion,
+                mu,
+                estado,
+                color,
+                desc,
+                poblacionFinal,
+                tempC,
+                biomasaInicial,
+                tiempoHoras
+            };
+        }
+
+        // --- Renderizar resultados ---
+        function renderizar(resultado) {
+            // Dashboard
+            const htmlDashboard = `
+                <div class="dashboard">
+                    <div class="dashboard-card" style="border: 2px solid ${resultado.color};">
+                        <span class="label">ESTADO DEL BIOPROCESO</span>
+                        <span class="value" style="color: ${resultado.color};">${resultado.estado}</span>
+                        <p class="desc">${resultado.desc}</p>
+                    </div>
+                    <div class="dashboard-card" style="border: 2px solid #9b59b6;">
+                        <span class="label">MÉTRICAS DEL RELOJ MOLECULAR</span>
+                        <span class="value" style="color: #8e44ad;">Tasa Celular (μ): ${resultado.mu.toFixed(4)} h⁻¹</span>
+                        <p class="desc">Biomasa Inicial: <b>${resultado.biomasaInicial} u</b><br>Cosecha Final: <b>${resultado.poblacionFinal.toFixed(2)} u</b></p>
+                    </div>
+                </div>
+            `;
+
+            // Gráfica (usando Chart.js)
+            const chartId = 'chart-' + Date.now();
+            const htmlChart = `
+                <div class="chart-container">
+                    <canvas id="${chartId}" style="width:100%; max-height:300px;"></canvas>
+                </div>
+            `;
+
+            // Análisis pedagógico
+            const htmlAnalisis = `
+                <div class="analysis-box">
+                    <h4>🔬 Fundamento Bioingenieril para el Aula:</h4>
+                    <p>
+                        🌡️ <b>Energía de Activación:</b> Aumentar la temperatura proporciona energía cinética a las moléculas del medio. Esto acelera el metabolismo bacteriano al facilitar que las enzimas superen la barrera energética (Ea) necesaria para transformar los nutrientes.
+                    </p>
+                    <p>
+                        💥 <b>El Choque Térmico (Desnaturalización):</b> Al superar los 40°C, la curva se aplana drásticamente. El exceso de calor destruye los enlaces débiles que mantienen la forma tridimensional de las proteínas celulares, anulando su función biológica de manera irreversible.
+                    </p>
+                </div>
+            `;
+
+            // Ensamblar todo
+            resultsContainer.innerHTML = `
+                <div class="result-header">📊 Monitorización del Biorreactor</div>
+                ${htmlDashboard}
+                ${htmlChart}
+                ${htmlAnalisis}
+            `;
+
+            // --- Crear gráfica con Chart.js ---
+            const ctx = document.getElementById(chartId).getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: resultado.tiempos.map(t => t.toFixed(1)),
+                    datasets: [{
+                        label: `Cultivo a ${resultado.tempC}°C`,
+                        data: resultado.poblacion,
+                        borderColor: resultado.color,
+                        backgroundColor: resultado.color + '33',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            labels: { font: { size: 11 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Biomasa: ' + context.parsed.y.toFixed(2) + ' u';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tiempo de Cultivo (Horas)',
+                                font: { size: 11 }
+                            },
+                            grid: { display: false }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Concentración de Biomasa (u)',
+                                font: { size: 11 }
+                            },
+                            grid: { color: '#e0e0e0' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Función principal de simulación ---
+        function ejecutarSimulacion() {
+            const temp = parseFloat(tempSlider.value);
+            const biomasa = parseFloat(biomasaSlider.value);
+            const tiempo = parseFloat(tiempoSlider.value);
+
+            const resultado = simularCrecimiento(temp, biomasa, tiempo);
+            renderizar(resultado);
+        }
+
+        // Eventos
+        simularBtn.addEventListener('click', ejecutarSimulacion);
+
+        // Ejecutar al cargar la página con valores por defecto
+        window.addEventListener('load', ejecutarSimulacion);
+
+        // También ejecutar al cambiar los sliders (opcional, para mayor dinamismo)
+        // Se puede descomentar si se desea actualización automática:
+        // tempSlider.addEventListener('input', ejecutarSimulacion);
+        // biomasaSlider.addEventListener('input', ejecutarSimulacion);
+        // tiempoSlider.addEventListener('input', ejecutarSimulacion);
+
+        // Soporte para Enter en los sliders (no aplicable directamente)
+    })();
+</script>
+</body>
+</html>

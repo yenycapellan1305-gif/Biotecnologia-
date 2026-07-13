@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Filogenia - Árbol Evolutivo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #f0f5fc;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 20, 40, 0.12);
+            padding: 30px 35px 40px;
+            transition: all 0.2s;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a2a3a;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        h1 small {
+            font-size: 16px;
+            font-weight: 400;
+            color: #4a6a85;
+        }
+
+        .subtitle {
+            color: #3a5a7a;
+            font-size: 15px;
+            border-left: 4px solid #2c7be5;
+            padding-left: 16px;
+            margin-bottom: 28px;
+            background: #f0f7fe;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.6;
+            padding: 10px 16px;
+        }
+
+        /* Panel de controles */
+        .controls {
+            background: #f8fbff;
+            border-radius: 16px;
+            padding: 22px 25px;
+            margin-bottom: 28px;
+            border: 1px solid #e2ebf5;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 20px 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1 0 160px;
+        }
+
+        .control-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f3348;
+            margin-bottom: 5px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .control-group select {
+            padding: 10px 12px;
+            border: 1.5px solid #d0dcec;
+            border-radius: 10px;
+            font-size: 15px;
+            background: white;
+            transition: border 0.2s, box-shadow 0.2s;
+            width: 100%;
+            cursor: pointer;
+            appearance: auto;
+        }
+
+        .control-group select:focus {
+            border-color: #2c7be5;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.15);
+        }
+
+        .btn-primary {
+            background: #1a3a5a;
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 14px 32px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(26, 58, 90, 0.2);
+            letter-spacing: 0.3px;
+            flex: 1 0 200px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover {
+            background: #0f2a44;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(26, 58, 90, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Resultados */
+        .results {
+            margin-top: 20px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a2a3a;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #e6edf5;
+            padding-bottom: 8px;
+        }
+
+        .error-msg {
+            background: #fee8e8;
+            color: #b33c3c;
+            padding: 14px 20px;
+            border-radius: 12px;
+            border-left: 5px solid #d9534f;
+            font-weight: 500;
+            margin: 10px 0;
+        }
+
+        .tree-container {
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 600px;
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .tree-header {
+            background-color: #34495e;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .tree-body {
+            padding: 20px;
+            background-color: #f8f9fa;
+            position: relative;
+        }
+
+        .tree-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .tree-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .species-tag {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            min-width: 100px;
+            text-align: center;
+            color: white;
+        }
+
+        .species-tag.red {
+            background-color: #e74c3c;
+        }
+        .species-tag.blue {
+            background-color: #3498db;
+        }
+
+        .tree-line {
+            height: 2px;
+            background-color: #7f8c8d;
+            flex-grow: 1;
+            margin: 0 10px;
+            position: relative;
+        }
+
+        .tree-line.green {
+            background-color: #2ecc71;
+        }
+
+        .tree-label {
+            font-size: 11px;
+            color: #7f8c8d;
+            white-space: nowrap;
+        }
+
+        .tree-label.green {
+            color: #27ae60;
+        }
+
+        .tree-vertical {
+            width: 2px;
+            height: 40px;
+            background-color: #7f8c8d;
+            margin-left: 50px;
+        }
+
+        .tree-branch {
+            border-left: 3px solid #2ecc71;
+            padding-left: 15px;
+            margin-left: 48px;
+            margin-top: 5px;
+        }
+
+        .tree-branch .tree-row {
+            margin-bottom: 10px;
+        }
+
+        .tree-branch .tree-row:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Análisis */
+        .analysis-box {
+            background-color: #e8f8f5;
+            border-left: 5px solid #1abc9c;
+            padding: 20px;
+            margin-top: 15px;
+            border-radius: 4px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .analysis-box h4 {
+            color: #0b5345;
+            margin-top: 0;
+            font-weight: bold;
+            font-size: 18px;
+            border-bottom: 1px solid #1abc9c;
+            padding-bottom: 5px;
+        }
+
+        .analysis-box p {
+            color: #000000;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 12px 0;
+        }
+
+        .analysis-box .highlight {
+            background-color: #d1f2eb;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            border: 1px dashed #16a085;
+        }
+
+        .analysis-box .highlight p {
+            color: #0b5345;
+            font-size: 13.5px;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .analysis-box .highlight p span {
+            color: #000000;
+            font-weight: normal;
+        }
+
+        .footer-note {
+            margin-top: 30px;
+            font-size: 13px;
+            color: #6a8aaa;
+            text-align: center;
+            border-top: 1px solid #e6edf5;
+            padding-top: 18px;
+        }
+
+        @media (max-width: 700px) {
+            .container { padding: 20px 16px; }
+            .controls { flex-direction: column; align-items: stretch; gap: 16px; }
+            .btn-primary { width: 100%; }
+            .tree-container { max-width: 100%; }
+            .tree-body { padding: 15px; }
+            .species-tag { min-width: 70px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>
+        🌳 Simulador de Filogenia
+        <small>Árbol evolutivo basado en distancias moleculares</small>
+    </h1>
+    <div class="subtitle">
+        Selecciona tres especies y descubre su parentesco evolutivo a partir de datos genéticos reales aproximados.
+    </div>
+
+    <!-- Panel de controles -->
+    <div class="controls">
+        <div class="control-group">
+            <label for="esp1">Especie 1</label>
+            <select id="esp1">
+                <option value="Humano">Humano</option>
+                <option value="Chimpance">Chimpancé</option>
+                <option value="Gorila">Gorila</option>
+                <option value="Raton">Ratón</option>
+                <option value="Pollo">Pollo</option>
+                <option value="Mosca">Mosca</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="esp2">Especie 2</label>
+            <select id="esp2">
+                <option value="Humano">Humano</option>
+                <option value="Chimpance" selected>Chimpancé</option>
+                <option value="Gorila">Gorila</option>
+                <option value="Raton">Ratón</option>
+                <option value="Pollo">Pollo</option>
+                <option value="Mosca">Mosca</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="esp3">Especie 3</label>
+            <select id="esp3">
+                <option value="Humano">Humano</option>
+                <option value="Chimpance">Chimpancé</option>
+                <option value="Gorila">Gorila</option>
+                <option value="Raton">Ratón</option>
+                <option value="Pollo" selected>Pollo</option>
+                <option value="Mosca">Mosca</option>
+            </select>
+        </div>
+
+        <button class="btn-primary" id="generateBtn">🧬 Generar Árbol Comparativo</button>
+    </div>
+
+    <!-- Área de resultados -->
+    <div id="resultsContainer" class="results"></div>
+
+    <div class="footer-note">
+        Simulador educativo · Datos de distancias genéticas basados en estudios reales · <span style="color:#2c7be5;">Reloj molecular</span> explicado
+    </div>
+</div>
+
+<script>
+    (function() {
+        // --- Datos de distancias genéticas (aproximaciones reales) ---
+        const DATOS_ESPECIES = {
+            "Humano": {"Chimpance": 0.02, "Gorila": 0.04, "Raton": 0.15, "Pollo": 0.30, "Mosca": 0.55},
+            "Chimpance": {"Humano": 0.02, "Gorila": 0.03, "Raton": 0.16, "Pollo": 0.31, "Mosca": 0.56},
+            "Gorila": {"Humano": 0.04, "Chimpance": 0.03, "Raton": 0.17, "Pollo": 0.32, "Mosca": 0.57},
+            "Raton": {"Humano": 0.15, "Chimpance": 0.16, "Gorila": 0.17, "Pollo": 0.35, "Mosca": 0.60},
+            "Pollo": {"Humano": 0.30, "Chimpance": 0.31, "Gorila": 0.32, "Raton": 0.35, "Mosca": 0.65},
+            "Mosca": {"Humano": 0.55, "Chimpance": 0.56, "Gorila": 0.57, "Raton": 0.60, "Pollo": 0.65}
+        };
+
+        // Elementos DOM
+        const esp1Select = document.getElementById('esp1');
+        const esp2Select = document.getElementById('esp2');
+        const esp3Select = document.getElementById('esp3');
+        const generateBtn = document.getElementById('generateBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        // --- Funciones ---
+        function obtenerDistancia(esp1, esp2) {
+            if (esp1 === esp2) return 0.0;
+            try {
+                return DATOS_ESPECIES[esp1][esp2];
+            } catch (e) {
+                return DATOS_ESPECIES[esp2][esp1];
+            }
+        }
+
+        function construirArbol(espA, espB, espC) {
+            const d_ab = obtenerDistancia(espA, espB);
+            const d_ac = obtenerDistancia(espA, espC);
+            const d_bc = obtenerDistancia(espB, espC);
+
+            const distancias = { "A-B": d_ab, "A-C": d_ac, "B-C": d_bc };
+            let parMinimo = "A-B";
+            let valMinimo = d_ab;
+            if (d_ac < valMinimo) { parMinimo = "A-C"; valMinimo = d_ac; }
+            if (d_bc < valMinimo) { parMinimo = "B-C"; valMinimo = d_bc; }
+
+            let c1, c2, solo;
+            let distSola;
+            if (parMinimo === "A-B") {
+                c1 = espA; c2 = espB; solo = espC;
+                distSola = (d_ac + d_bc) / 2;
+            } else if (parMinimo === "A-C") {
+                c1 = espA; c2 = espC; solo = espB;
+                distSola = (d_ab + d_bc) / 2;
+            } else {
+                c1 = espB; c2 = espC; solo = espA;
+                distSola = (d_ab + d_ac) / 2;
+            }
+
+            const altura1 = valMinimo / 2;
+            const altura2 = distSola / 2;
+
+            // Construcción del gráfico HTML
+            const graficoHTML = `
+                <div class="tree-container">
+                    <div class="tree-header">Árbol Genealógico Evolutivo (Filogenia)</div>
+                    <div class="tree-body">
+                        <div class="tree-row">
+                            <span class="species-tag red">${solo}</span>
+                            <div class="tree-line"></div>
+                            <span class="tree-label">Línea antigua (Separación a ${altura2.toFixed(3)})</span>
+                        </div>
+                        <div class="tree-vertical"></div>
+                        <div class="tree-branch">
+                            <div class="tree-row">
+                                <span class="species-tag blue">${c1}</span>
+                                <div class="tree-line green"></div>
+                                <span class="tree-label green">🔀 Divergencia reciente (${altura1.toFixed(3)})</span>
+                            </div>
+                            <div class="tree-row">
+                                <span class="species-tag blue">${c2}</span>
+                                <div class="tree-line green"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Análisis pedagógico
+            const analisisHTML = `
+                <div class="analysis-box">
+                    <h4>🔬 Análisis Evolutivo Avanzado:</h4>
+                    <p>
+                        💥 <b>1. Evidencia Molecular Clave (Relación Hermana):</b><br>
+                        Al analizar las diferencias moleculares, el algoritmo detectó que <b>${c1}</b> y <b>${c2}</b> presentan una distancia genética de solo <b>${valMinimo.toFixed(2)}</b>. En el lenguaje de la evolución, una distancia tan baja significa que sus linajes se separaron hace relativamente "poco" tiempo atrás. Esto las convierte en <b>especies hermanas</b> dentro de este grupo; sus secuencias de ADN conservan un alto porcentaje de identidad porque comparten un ancestro común directo mucho más reciente.
+                    </p>
+                    <p>
+                        🗺️ <b>2. El Grupo Externo u "Outgroup" (La Raíz Antigua):</b><br>
+                        Por el contrario, la especie <b>${solo}</b> muestra una distancia promedio drástica de <b>${distSola.toFixed(2)}</b> frente al par anterior. Esta desconexión molecular nos indica que pertenece a un linaje que se separó de forma independiente mucho antes en el tiempo geológico. Actúa como el <i>outgroup</i> (grupo de referencia), permitiéndonos confirmar que las características genéticas compartidas por <b>${c1}</b> y <b>${c2}</b> aparecieron después de que el linaje de <b>${solo}</b> tomara su propio camino evolutivo.
+                    </p>
+                    <p>
+                        ⏳ <b>3. El Concepto del "Reloj Molecular":</b><br>
+                        ¿Por qué usamos estas distancias matemáticas? El algoritmo asume el principio del <b>Reloj Molecular</b>: la idea de que las mutaciones genéticas se acumulan a un ritmo constante a lo largo de millones de años. Por ende, la altura del nodo de separación (<b>${altura1.toFixed(3)}</b> para el grupo cercano y <b>${altura2.toFixed(3)}</b> para el origen común) es una estimación proporcional de cuánto tiempo ha tenido cada linaje para acumular cambios en su genoma de forma independiente.
+                    </p>
+                    <div class="highlight">
+                        <p>
+                            💡 Pregunta de reflexión para el aula:<br>
+                            <span>Si observamos que ${c1} y ${c2} están tan cerca, ¿significa que una especie evolucionó de la otra? ¡No! Significa que ambas provienen de un familiar común desaparecido que no era ni la una ni la otra. ¿Cómo explicarían esto usando como analogía a dos primos humanos y sus abuelos?</span>
+                        </p>
+                    </div>
+                </div>
+            `;
+
+            return { grafico: graficoHTML, analisis: analisisHTML };
+        }
+
+        function procesarSimulacion() {
+            const esp1 = esp1Select.value;
+            const esp2 = esp2Select.value;
+            const esp3 = esp3Select.value;
+
+            // Validar que sean distintas
+            if (esp1 === esp2 || esp1 === esp3 || esp2 === esp3) {
+                resultsContainer.innerHTML = `<div class="error-msg">⚠️ Error pedagógico: Por favor selecciona 3 especies completamente diferentes para que el análisis filogenético tenga sentido comparativo.</div>`;
+                return;
+            }
+
+            const { grafico, analisis } = construirArbol(esp1, esp2, esp3);
+
+            let output = `<div class="result-header">📊 Parentesco Evolutivo Calculado</div>`;
+            output += grafico;
+            output += analisis;
+
+            resultsContainer.innerHTML = output;
+        }
+
+        // Eventos
+        generateBtn.addEventListener('click', procesarSimulacion);
+
+        // Ejecutar al cargar la página (valores por defecto: Humano, Chimpancé, Pollo)
+        window.addEventListener('load', procesarSimulacion);
+
+        // También permitir ejecutar con Enter en los selects (opcional)
+        [esp1Select, esp2Select, esp3Select].forEach(sel => {
+            sel.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') procesarSimulacion();
+            });
+        });
+    })();
+</script>
+</body>
+</html>

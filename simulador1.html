@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Alineamiento de ADN - Bioinformática</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #f0f5fc;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 20, 40, 0.12);
+            padding: 30px 35px 40px;
+            transition: all 0.2s;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a2a3a;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        h1 small {
+            font-size: 16px;
+            font-weight: 400;
+            color: #4a6a85;
+        }
+
+        .subtitle {
+            color: #3a5a7a;
+            font-size: 15px;
+            border-left: 4px solid #2c7be5;
+            padding-left: 16px;
+            margin-bottom: 28px;
+            background: #f0f7fe;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.6;
+            padding: 10px 16px;
+        }
+
+        /* Controles */
+        .controls {
+            background: #f8fbff;
+            border-radius: 16px;
+            padding: 22px 25px;
+            margin-bottom: 28px;
+            border: 1px solid #e2ebf5;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 20px 30px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1 0 180px;
+        }
+
+        .control-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f3348;
+            margin-bottom: 5px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .control-group input[type="text"] {
+            padding: 10px 14px;
+            border: 1.5px solid #d0dcec;
+            border-radius: 10px;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 15px;
+            background: white;
+            transition: border 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .control-group input[type="text"]:focus {
+            border-color: #2c7be5;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.15);
+        }
+
+        .slider-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px 15px;
+            flex: 2 0 300px;
+        }
+
+        .slider-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 4px 12px 4px 16px;
+            border-radius: 30px;
+            border: 1px solid #dee8f2;
+            flex: 1 0 130px;
+        }
+
+        .slider-item label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e2f3f;
+            min-width: 60px;
+        }
+
+        .slider-item input[type="range"] {
+            flex: 1;
+            min-width: 70px;
+            accent-color: #2c7be5;
+            height: 5px;
+            background: #dbe4ed;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .slider-item .value-badge {
+            background: #eef4fa;
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a2a3a;
+            min-width: 28px;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #1a3a5a;
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 14px 32px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(26, 58, 90, 0.2);
+            letter-spacing: 0.3px;
+            flex: 1 0 220px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover {
+            background: #0f2a44;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(26, 58, 90, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Resultados */
+        .results {
+            margin-top: 20px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a2a3a;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #e6edf5;
+            padding-bottom: 8px;
+        }
+
+        .transcription-box {
+            background: #f0f7fe;
+            padding: 14px 20px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 16px;
+            line-height: 1.8;
+            border-left: 5px solid #2c7be5;
+        }
+
+        .transcription-box strong {
+            color: #0a2a4a;
+        }
+
+        .transcription-box .arrow {
+            color: #2c7be5;
+            font-weight: 300;
+            margin: 0 8px;
+        }
+
+        .matrix-wrapper {
+            overflow-x: auto;
+            margin: 20px 0 16px;
+            border-radius: 14px;
+            border: 1px solid #e6edf5;
+            background: white;
+            padding: 4px;
+        }
+
+        .bio-table {
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 14px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .bio-table th {
+            background: #1a2a3a;
+            color: white;
+            padding: 10px 6px;
+            border: 1px solid #2c4058;
+            text-align: center;
+            font-weight: 500;
+            min-width: 42px;
+        }
+
+        .bio-table td {
+            padding: 10px 6px;
+            border: 1px solid #d4dfea;
+            text-align: center;
+            min-width: 42px;
+            background: #fafcff;
+        }
+
+        .bio-header-cell {
+            background: #e8eef5 !important;
+            font-weight: 700;
+            color: #1a2a3a;
+        }
+
+        .bio-score-cell {
+            background: #fafcff;
+        }
+
+        .bio-max-cell {
+            background: #2ecc71 !important;
+            color: white;
+            font-weight: 700;
+        }
+
+        .score-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px 40px;
+            background: #f5f9ff;
+            padding: 14px 24px;
+            border-radius: 14px;
+            margin: 18px 0 12px;
+            border: 1px solid #e0ebf5;
+        }
+
+        .score-summary div {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-size: 15px;
+            color: #1a2a3a;
+        }
+
+        .score-summary .label {
+            font-weight: 500;
+            color: #3a5a7a;
+        }
+
+        .score-summary .value {
+            font-weight: 700;
+            font-size: 18px;
+            color: #0a2a4a;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border-left: 6px solid #2980b9;
+            padding: 18px 24px;
+            margin-top: 28px;
+            border-radius: 12px;
+            line-height: 1.6;
+            color: #1a2a3a;
+        }
+
+        .info-box h4 {
+            font-size: 18px;
+            margin: 0 0 10px 0;
+            color: #1a3a5a;
+            font-weight: 600;
+        }
+
+        .info-box p {
+            margin: 10px 0;
+        }
+
+        .info-box ul {
+            padding-left: 24px;
+            margin: 8px 0 12px;
+        }
+
+        .info-box li {
+            margin-bottom: 4px;
+        }
+
+        .error-msg {
+            background: #fee8e8;
+            color: #b33c3c;
+            padding: 14px 20px;
+            border-radius: 12px;
+            border-left: 5px solid #d9534f;
+            font-weight: 500;
+            margin: 10px 0;
+        }
+
+        .footer-note {
+            margin-top: 30px;
+            font-size: 13px;
+            color: #6a8aaa;
+            text-align: center;
+            border-top: 1px solid #e6edf5;
+            padding-top: 18px;
+        }
+
+        @media (max-width: 700px) {
+            .container { padding: 20px 16px; }
+            .controls { flex-direction: column; align-items: stretch; gap: 16px; }
+            .slider-group { flex-direction: column; align-items: stretch; }
+            .slider-item { flex: 1 1 auto; }
+            .btn-primary { width: 100%; }
+            .bio-table { font-size: 12px; }
+            .bio-table th, .bio-table td { padding: 6px 4px; min-width: 30px; }
+            .score-summary { flex-direction: column; gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>
+        🧬 Simulador de Alineamiento
+        <small>Needleman‑Wunsch + Transcripción</small>
+    </h1>
+    <div class="subtitle">
+        Ingresa dos secuencias de ADN, ajusta las puntuaciones y analiza la matriz de alineamiento con explicación de gaps.
+    </div>
+
+    <!-- Panel de controles -->
+    <div class="controls">
+        <div class="control-group">
+            <label for="seq1">Secuencia ADN 1</label>
+            <input type="text" id="seq1" value="ATCGATT" placeholder="Ej: ATCGATT">
+        </div>
+        <div class="control-group">
+            <label for="seq2">Secuencia ADN 2</label>
+            <input type="text" id="seq2" value="ATCGC" placeholder="Ej: ATCGC">
+        </div>
+
+        <div class="slider-group">
+            <div class="slider-item">
+                <label>Match</label>
+                <input type="range" id="matchSlider" min="1" max="5" value="2" step="1">
+                <span class="value-badge" id="matchVal">2</span>
+            </div>
+            <div class="slider-item">
+                <label>Mismatch</label>
+                <input type="range" id="mismatchSlider" min="-5" max="0" value="-1" step="1">
+                <span class="value-badge" id="mismatchVal">-1</span>
+            </div>
+            <div class="slider-item">
+                <label>Gap</label>
+                <input type="range" id="gapSlider" min="-5" max="0" value="-2" step="1">
+                <span class="value-badge" id="gapVal">-2</span>
+            </div>
+        </div>
+
+        <button class="btn-primary" id="analyzeBtn">🔬 Analizar y Transcribir</button>
+    </div>
+
+    <!-- Área de resultados -->
+    <div id="resultsContainer" class="results"></div>
+
+    <div class="footer-note">
+        Simulador educativo · Alineamiento global con programación dinámica · <span style="color:#2c7be5;">Gaps</span> explicados
+    </div>
+</div>
+
+<script>
+    (function() {
+        // Elementos DOM
+        const seq1Input = document.getElementById('seq1');
+        const seq2Input = document.getElementById('seq2');
+        const matchSlider = document.getElementById('matchSlider');
+        const mismatchSlider = document.getElementById('mismatchSlider');
+        const gapSlider = document.getElementById('gapSlider');
+        const matchVal = document.getElementById('matchVal');
+        const mismatchVal = document.getElementById('mismatchVal');
+        const gapVal = document.getElementById('gapVal');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        // Actualizar valores mostrados de los sliders
+        matchSlider.addEventListener('input', () => { matchVal.textContent = matchSlider.value; });
+        mismatchSlider.addEventListener('input', () => { mismatchVal.textContent = mismatchSlider.value; });
+        gapSlider.addEventListener('input', () => { gapVal.textContent = gapSlider.value; });
+
+        // --- Lógica principal ---
+        function transcribirADN(secuencia) {
+            return secuencia.replace(/T/g, 'U');
+        }
+
+        function calcularMatrizYGaps(seq1, seq2, match, mismatch, gap) {
+            const n = seq1.length;
+            const m = seq2.length;
+            // Inicializar matriz (n+1) x (m+1) con ceros
+            const matriz = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
+
+            // Inicializar primera fila y columna
+            for (let i = 0; i <= n; i++) matriz[i][0] = i * gap;
+            for (let j = 0; j <= m; j++) matriz[0][j] = j * gap;
+
+            // Llenar matriz
+            for (let i = 1; i <= n; i++) {
+                for (let j = 1; j <= m; j++) {
+                    const matchScore = matriz[i-1][j-1] + (seq1[i-1] === seq2[j-1] ? match : mismatch);
+                    const gapVertical = matriz[i-1][j] + gap;
+                    const gapHorizontal = matriz[i][j-1] + gap;
+                    matriz[i][j] = Math.max(matchScore, gapVertical, gapHorizontal);
+                }
+            }
+
+            const gapsEstimados = Math.abs(n - m);
+            return { matriz, gapsEstimados };
+        }
+
+        function generarTablaHTML(seq1, seq2, matriz) {
+            const ejeX = ['-', ...seq2.split('')];
+            const ejeY = ['-', ...seq1.split('')];
+            let html = '<div class="matrix-wrapper"><table class="bio-table">';
+
+            // Cabecera superior
+            html += '<tr><th></th>';
+            for (let ch of ejeX) {
+                html += `<th>${ch}</th>`;
+            }
+            html += '</tr>';
+
+            // Filas
+            for (let i = 0; i < ejeY.length; i++) {
+                html += `<tr><td class="bio-header-cell">${ejeY[i]}</td>`;
+                for (let j = 0; j < ejeX.length; j++) {
+                    const isFinal = (i === ejeY.length - 1 && j === ejeX.length - 1);
+                    const cls = isFinal ? 'bio-max-cell' : 'bio-score-cell';
+                    html += `<td class="${cls}">${matriz[i][j]}</td>`;
+                }
+                html += '</tr>';
+            }
+
+            html += '</table></div>';
+            return html;
+        }
+
+        function validarADN(secuencia) {
+            return /^[ATCG]+$/i.test(secuencia);
+        }
+
+        function ejecutarSimulacion() {
+            // Obtener valores
+            let s1 = seq1Input.value.trim().toUpperCase();
+            let s2 = seq2Input.value.trim().toUpperCase();
+            const match = parseInt(matchSlider.value, 10);
+            const mismatch = parseInt(mismatchSlider.value, 10);
+            const gap = parseInt(gapSlider.value, 10);
+
+            // Validaciones
+            if (!s1 || !s2) {
+                resultsContainer.innerHTML = `<div class="error-msg">⚠️ Error: Ambas secuencias son obligatorias.</div>`;
+                return;
+            }
+            if (!validarADN(s1) || !validarADN(s2)) {
+                resultsContainer.innerHTML = `<div class="error-msg">⚠️ Error: Las secuencias solo pueden contener las bases A, T, C o G.</div>`;
+                return;
+            }
+
+            // 1. Transcripción
+            const arn1 = transcribirADN(s1);
+            const arn2 = transcribirADN(s2);
+
+            // 2. Alineamiento
+            const { matriz, gapsEstimados } = calcularMatrizYGaps(s1, s2, match, mismatch, gap);
+            const scoreFinal = matriz[s1.length][s2.length];
+
+            // 3. Construir salida HTML
+            let output = `<div class="result-header">📊 Resultados del Procesamiento Bioinformático</div>`;
+
+            // Transcripciones
+            output += `
+                <div class="transcription-box">
+                    <strong>ADN 1:</strong> ${s1} <span class="arrow">→</span> <strong>ARN:</strong> ${arn1}<br>
+                    <strong>ADN 2:</strong> ${s2} <span class="arrow">→</span> <strong>ARN:</strong> ${arn2}
+                </div>
+            `;
+
+            // Tabla
+            output += generarTablaHTML(s1, s2, matriz);
+
+            // Resumen de puntuación
+            output += `
+                <div class="score-summary">
+                    <div><span class="label">Puntuación final (celda verde):</span> <span class="value">${scoreFinal}</span></div>
+                    <div><span class="label">Gaps estructurales (diferencia de longitud):</span> <span class="value">${gapsEstimados}</span></div>
+                </div>
+            `;
+
+            // Explicación pedagógica
+            output += `
+                <div class="info-box">
+                    <h4>🧬 ¿Qué es un Gap en Bioinformática?</h4>
+                    <p>En el alineamiento de secuencias (ADN o proteínas), un <b>Gap</b> se representa con un guion (<b>-</b>) e indica la presencia de una mutación de tipo <b>Indel</b> (Inserción o Deleción):</p>
+                    <ul>
+                        <li><b>Inserción:</b> Se ha añadido una base nitrogenada en la secuencia analizada a lo largo de la evolución.</li>
+                        <li><b>Deleción:</b> Se ha perdido o eliminado una base nitrogenada en la secuencia con respecto a la original.</li>
+                    </ul>
+                    <p><b>¿Por qué penalizamos los Gaps en el simulador?</b><br>
+                    Biológicamente, la aparición de mutaciones es un evento menos frecuente que la simple sustitución de una base por otra. Por lo tanto, los algoritmos como Needleman‑Wunsch introducen un valor negativo (<b>Gap Penalty</b>) para obligar al sistema a buscar alineamientos donde las cadenas coincidan de la forma más natural posible, evitando introducir huecos artificiales innecesarios.</p>
+                </div>
+            `;
+
+            resultsContainer.innerHTML = output;
+        }
+
+        // Evento del botón
+        analyzeBtn.addEventListener('click', ejecutarSimulacion);
+
+        // Ejecutar al cargar la página (con valores por defecto)
+        window.addEventListener('load', ejecutarSimulacion);
+
+        // Ejecutar con Enter en los campos
+        seq1Input.addEventListener('keydown', (e) => { if (e.key === 'Enter') ejecutarSimulacion(); });
+        seq2Input.addEventListener('keydown', (e) => { if (e.key === 'Enter') ejecutarSimulacion(); });
+    })();
+</script>
+</body>
+</html>
